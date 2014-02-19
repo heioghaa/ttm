@@ -30,7 +30,7 @@ class ReceiveMessageWorker(Thread):
 		self.shutdown = false
 
 	def run(self):
-		while !self.shutdown:
+		while not self.shutdown:
 			message = socket.recv(4096)
 			data = json.loads(message)
 			with mtx:
