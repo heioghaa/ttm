@@ -4,7 +4,7 @@ Very simple server implementation that should serve as a basis
 for implementing the chat server
 '''
 import SocketServer
-
+import Re
 '''
 The RequestHandler class for our server.
 
@@ -12,9 +12,10 @@ It is instantiated once per connection to the server, and must
 override the handle() method to implement communication to the
 client.
 '''
-
-
 class CLientHandler(SocketServer.BaseRequestHandler):
+    def isAlphanumeric(strg, search=re.compile(r'[^a-z0-9_.]').search):
+        return not bool(search(strg))
+
     def handle(self):
         # Get a reference to the socket object
         self.connection = self.request
