@@ -14,9 +14,10 @@ it is the start() method that is responsible for actually
 executing the run() method in a new thread.
 '''
 from threading import Thread
+import datetime
+import globals
 import json
 import re
-import datetime
 
 
 class ReceiveMessageWorker(Thread):
