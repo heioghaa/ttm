@@ -8,6 +8,7 @@ import thread
 from time import sleep
 import globals
 import messageWorker
+import uuid
 '''
 The RequestHandler class for our server.
 
@@ -29,21 +30,22 @@ class CLientHandler(SocketServer.BaseRequestHandler):
         self.ip = self.client_address[0]
         # Get the remote port number of the socket
         self.port = self.client_address[1]
+        self.id = uuid.uuid1()
         print 'Client connected @' + self.ip + ':' + str(self.port)
         reciever = RecieveMessageWorker(self.connection, self.id)
         reciever.start()
-        while controlQueue[0][0] not == self.id
+        while controlQueue[0][0] != self.id:
              sleep(0.02)
         status = controlQueue.pop()[1]
         if status[:15] == 'Invalid username':
             self.connection.sendall('login\n' + status[:15] + '\n' + status[16:])
             print status
             self.shutDown()
-        else if status[:21] == 'Username already taken':
+        elif status[:21] == 'Username already taken':
             self.connection.sendall('login\n' + status[22:] + '\n' + status[:21])
             print status
             self.shutDown()
-        else if status[:4] not == 'login':
+        elif status[:4] != 'login':
             self.connection.sendall('login\nUnknown Error' + status[5:])
             print status
             self.shutDown()
