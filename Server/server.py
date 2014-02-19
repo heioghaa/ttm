@@ -7,13 +7,13 @@ import SocketServer
 import thread
 from time import sleep
 import globals
-import messageWorker
+import MessageWorker
 import uuid
 '''
 The RequestHandler class for our server.
 
 It is instantiated once per connection to the server, and must
-override the handle() method to implement communication to the
+overrid the handle() method to implement communication to the
 client.
 '''
 class CLientHandler(SocketServer.BaseRequestHandler):
@@ -36,7 +36,7 @@ class CLientHandler(SocketServer.BaseRequestHandler):
         reciever.start()
         while controlQueue[0][0] != self.id:
              sleep(0.02)
-        status = controlQueue.pop()[1]
+        status = controlQueue.get()[1]
         if status[:15] == 'Invalid username':
             self.connection.sendall('login\n' + status[:15] + '\n' + status[16:])
             print status
@@ -57,7 +57,7 @@ class CLientHandler(SocketServer.BaseRequestHandler):
                 self.connection.sendall(messageLog[msgNo])
                 msgNo += 1
             if controlQueue[0][0] == self.id:
-                status = controlQueue.pop()[1]
+                status = controlQueue.get()[1]
                 if status[:5] == 'logout':
                     self.connection.sendall('logout\n' + status[6:])
                     print status
