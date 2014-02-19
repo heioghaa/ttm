@@ -32,7 +32,7 @@ class ReceiveMessageWorker(Thread):
 			with mtx:
 				if data['request'] == 'login':
 					if data['username'] in userList.items():
-						controlQueue.put((self.id, 'Invalid username'))
+						controlQueue.put((self.id, 'Invalid username' + data['username']))
 					else:
 						userList[self.id] = data['username']
 						controlQueue.put((self.id, 'login'))
