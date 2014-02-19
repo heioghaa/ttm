@@ -19,18 +19,25 @@ import json
 
 class ReceiveMessageWorker(Thread):
 
-    def __init__(self, listener, connection, username):
+    def __init__(self, listener, connection, id):
         self.daemeon = True
 		self.socket = connection
 		self.owner = listener
-		self.username = username
+		self.id = id
 
     def run(self):
 		while True:
 			message = socket.recv(4096)
 			data = json.loads(message)
-			if data['request'] == 'logout':
-				controlQueue.put('logout')
-			else:
-				messageLog.append((self.username, data['message']))
+			with mtx:
+				if data['request'] == 'login':
+					if data['username'] in userList.items():
+						controlQueue.put((self.id, 'Invalid username'))
+					else:
+						userList[self.id] = data['username']
+						controlQueue.put((self.id, 'login'))
+				else if data['request'] == 'logout':
+					controlQueue.put((self.id, 'logout'))
+				else:
+					messageLog.append(self.username + ': ' + data['message'])
 				
