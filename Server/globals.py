@@ -1,9 +1,10 @@
+import thread
 import Queue
 import mutex
 
 messageLog = []
-controlQueue = Queue()
+controlQueue = Queue.Queue()
 clients = {}
-mtx = mutex()
+mtx = mutex.mutex()
 userList = {}
 
