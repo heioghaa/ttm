@@ -22,14 +22,14 @@ import re
 
 class ReceiveMessageWorker(Thread):
 
-    def __init__(self, listener, connection, id):
-        self.daemeon = True
+	def __init__(self, listener, connection, id):
+		self.daemeon = True
 		self.socket = connection
 		self.owner = listener
 		self.id = id
 		self.shutdown = false
 
-    def run(self):
+	def run(self):
 		while !self.shutdown:
 			message = socket.recv(4096)
 			data = json.loads(message)
