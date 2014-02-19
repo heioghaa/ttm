@@ -15,6 +15,8 @@ executing the run() method in a new thread.
 '''
 from threading import Thread
 import json
+import re
+import datetime
 
 
 class ReceiveMessageWorker(Thread):
@@ -24,20 +26,24 @@ class ReceiveMessageWorker(Thread):
 		self.socket = connection
 		self.owner = listener
 		self.id = id
+		self.shutdown = false
 
     def run(self):
-		while True:
+		while !self.shutdown:
 			message = socket.recv(4096)
 			data = json.loads(message)
 			with mtx:
 				if data['request'] == 'login':
 					if data['username'] in userList.items():
-						controlQueue.put((self.id, 'Invalid username' + data['username']))
+						controlQueue.put((self.id, 'Username already taken' + data['username']))
 					else:
-						userList[self.id] = data['username']
-						controlQueue.put((self.id, 'login'))
+						if re.search('[a-zA-Z0-9_]+', data['username']) == None:
+							controlQueue.put((self.id, 'Invalid username' + data['username']))
+						else:
+							userList[self.id] = data['username']
+							controlQueue.put((self.id, 'login'))
 				else if data['request'] == 'logout':
 					controlQueue.put((self.id, 'logout'))
 				else:
-					messageLog.append(self.username + ': ' + data['message'])
+					messageLog.append(datetime.datetime.today().time() + self.username + ': ' + data['message'])
 				
