@@ -4,7 +4,10 @@ Very simple server implementation that should serve as a basis
 for implementing the chat server
 '''
 import SocketServer
-import Re
+import thread
+from time import sleep
+import globals
+import messageWorker
 '''
 The RequestHandler class for our server.
 
@@ -13,8 +16,11 @@ override the handle() method to implement communication to the
 client.
 '''
 class CLientHandler(SocketServer.BaseRequestHandler):
-    def isAlphanumeric(strg, search=re.compile(r'[^a-z0-9_.]').search):
-        return not bool(search(strg))
+    def shutDown(self):
+        reciever.shutdown = True
+        reciever.join()
+        print 'Client disconnected'
+        self.exit()
 
     def handle(self):
         # Get a reference to the socket object
@@ -24,16 +30,39 @@ class CLientHandler(SocketServer.BaseRequestHandler):
         # Get the remote port number of the socket
         self.port = self.client_address[1]
         print 'Client connected @' + self.ip + ':' + str(self.port)
-        # Wait for data from the client
-        data = self.connection.recv(1024).strip()
-        # Check if the data exists
-        # (recv could have returned due to a disconnect)
-        if data:
-            print data
-            # Return the string in uppercase
-            self.connection.sendall(data.upper())
-        else:
-            print 'Client disconnected!'
+        reciever = RecieveMessageWorker(self.connection, self.id)
+        reciever.start()
+        while controlQueue[0][0] not == self.id
+             sleep(0.02)
+        status = controlQueue.pop()[1]
+        if status[:15] == 'Invalid username':
+            self.connection.sendall('login\n' + status[:15] + '\n' + status[16:])
+            print status
+            self.shutDown()
+        else if status[:21] == 'Username already taken':
+            self.connection.sendall('login\n' + status[22:] + '\n' + status[:21])
+            print status
+            self.shutDown()
+        else if status[:4] not == 'login':
+            self.connection.sendall('login\nUnknown Error' + status[5:])
+            print status
+            self.shutDown()
+        self.connection.sendall('login\n' + status[5:])
+        print status
+        msgNo = 0
+        while True:
+            while len(messageLog) >= msgNo:
+                self.connection.sendall(messageLog[msgNo])
+                msgNo += 1
+            if controlQueue[0][0] == self.id:
+                status = controlQueue.pop()[1]
+                if status[:5] == 'logout':
+                    self.connection.sendall('logout\n' + status[6:])
+                    print status
+                    self.shutDown()
+            
+        
+        
 
 '''
 This will make all Request handlers being called in its own thread.
