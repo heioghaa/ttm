@@ -69,8 +69,10 @@ class Client(object):
 # Kjøres når programmet startes
 if __name__ == "__main__":
 	# Definer host og port for serveren
-	HOST = 'localhost'
-	PORT = 9999
+	#HOST = 'localhost'
+	#PORT = 9999
+	HOST = raw_input('Enter hostname or ip address: ')
+	PORT = raw_input('Enter port: ')
 	# Initialiser klienten
 	client = Client()
 	# Start klienten
