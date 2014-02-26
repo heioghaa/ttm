@@ -11,12 +11,12 @@ class Client(object):
 		while True:
 			recived_data = self.connection.recv(1024)
 			data = json.loads(recived_data)
-			if data['response']=='login' and data['error']=='Invalid username!':
+			if data['response']=='login' and ('error' in data.keys()) and data['error']=='Invalid username!':
 				print data['response']+": "+data['error']+": "+data['username']+"\n"
 				username = raw_input('Enter your username: ')
 				request = 'login'
 				self.send(json.dumps({'username':username,'request':request}))
-			elif data['response']=='login' and data['error']=='Name already taken!':
+			elif data['response']=='login' and ('error' in data.keys()) and data['error']=='Name already taken!':
 				print data['response']+": "+data['error']+": "+data['username']+"\n"
 				username = raw_input('Enter your username: ')
 				request = 'login'
@@ -24,7 +24,7 @@ class Client(object):
 			elif data['response']=='login':
 				print data['response']+": "+data['username']+"\n"
 				self.Login = True
-			elif data['response']=='message' and data['error']=='You are not logged in!':
+			elif data['response']=='message' and ('error' in data.keys()) and data['error']=='You are not logged in!':
 				username = raw_input('Enter your username: ')
 				request = 'login'
 				self.send(json.dumps({'username':username,'request':request}))

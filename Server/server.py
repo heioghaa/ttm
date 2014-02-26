@@ -38,13 +38,22 @@ class CLientHandler(SocketServer.BaseRequestHandler):
         bla = 0
         if username:
             mtx.acquire()
-            data = JSONEncoder().encode({'response': response, 'username': username, 'messages': messageLog})
-            bla = len(messageLog)
+            self.printDebug("CONNECTION!")
+            if (len(messageLog) == 0):
+                 data = JSONEncoder().encode({'response': response, 'username': username, 'messages': messageLog})
+                 self.printDebug(data)
+                 self.connection.sendall(data)
+            while(bla<len(messageLog)):
+                data = JSONEncoder().encode({'response': response, 'username': username, 'messages': messageLog[bla]})
+               # bla = len(messageLog)
+                self.printDebug(data)
+                self.connection.sendall(data)
+                bla += 1
             mtx.release()
         else:
             data = JSONEncoder().encode({'response': response})
-        self.printDebug(data)
-        self.connection.sendall(data)
+            self.printDebug(data)
+            self.connection.sendall(data)
         return bla
             
 
@@ -91,7 +100,8 @@ class CLientHandler(SocketServer.BaseRequestHandler):
         while True:
             mtx.acquire()
             while len(messageLog) > msgNo:
-                self.connection.sendall(messageLog[msgNo])
+                data = JSONEncoder().encode({'response': 'message','message':messageLog[msgNo]})
+                self.connection.sendall(data)
                 msgNo += 1
             mtx.release()
 

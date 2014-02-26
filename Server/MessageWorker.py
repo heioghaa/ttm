@@ -34,7 +34,8 @@ class ReceiveMessageWorker(Thread):
 			data = json.loads(message)
 			mtx.acquire()
 			if data['request'] == 'login':
-				if data['username'] in userList.keys():
+				print data['username'], userList;
+				if unicode(data['username']) in userList.values():
 					controlQueue.put((self.id, 'taken' + data['username']))
 				else:
 					if not data['username'].isalnum():
@@ -45,5 +46,5 @@ class ReceiveMessageWorker(Thread):
 			elif data['request'] == 'logout':
 				controlQueue.put((self.id, 'logout'))
 			else:
-				messageLog.append(datetime.datetime.today().time() + self.username + ': ' + data['message'])
+				messageLog.append(unicode(datetime.datetime.today().time()) + userList[self.id] + ': ' + unicode(data['message']))
 			mtx.release()	
