@@ -25,7 +25,6 @@ class CLientHandler(SocketServer.BaseRequestHandler):
         reciever.shutdown = True
         reciever.join()
         print 'Client disconnected'
-        self.exit()
 
     def printDebug(self, string):
         print "DEBUG: " + str(string)
@@ -37,9 +36,15 @@ class CLientHandler(SocketServer.BaseRequestHandler):
 
     def sendResponse(self, response, username=None):
         if username:
-            data = JSONEncoder().encode({'response': response, 'username': username})
+            mtx.acquire()
+            data = JSONEncoder().encode({'response': response, 'username': username, 'messages': messageLog})
+            bla = len(messageLog)
+            mtx.release()
+            return bla
+        
         else:
             data = JSONEncoder().encode({'response': response})
+            printDebug(data)
         self.connection.sendall(data)
 
     def handle(self):
@@ -65,21 +70,23 @@ class CLientHandler(SocketServer.BaseRequestHandler):
         status = controlObj[1]
         if status[:7] == 'invalid':
             self.printDebug(status)
-            self.sendError('Invalid username!', status[:7])
+            self.sendError('Invalid username!', status[7:])
             self.shutDown(reciever)
+            return
         elif status[:5] == 'taken':
             self.printDebug(status)
             self.sendError('Name already taken!', status[5:])
             self.shutDown(reciever)
+            return
         elif status[:5] != 'login' or status == None:
             self.printDebug(status)
             self.sendError('Unknown error!', status)
             self.shutDown(reciever)
+            return
         else:
             self.printDebug(status)
-            self.sendResponse('login', status[5:])
+            msgNo = self.sendResponse('login', status[5:])
 
-        msgNo = 0
         while True:
             mtx.acquire()
             while len(messageLog) > msgNo:

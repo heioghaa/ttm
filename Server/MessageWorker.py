@@ -34,10 +34,10 @@ class ReceiveMessageWorker(Thread):
 			data = json.loads(message)
 			mtx.acquire()
 			if data['request'] == 'login':
-				if data['username'] in userList.items():
+				if data['username'] in userList.keys():
 					controlQueue.put((self.id, 'taken' + data['username']))
 				else:
-					if re.search('[a-zA-Z0-9_]+', data['username']) == None:
+					if not data['username'].isalnum():
 						controlQueue.put((self.id, 'invalid' + data['username']))
 					else:
 						userList[self.id] = data['username']
