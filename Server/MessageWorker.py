@@ -22,10 +22,9 @@ import re
 
 class ReceiveMessageWorker(Thread):
 
-	def __init__(self, listener, connection, id):
+	def __init__(self, connection, id):
 		self.daemeon = True
 		self.socket = connection
-		self.owner = listener
 		self.id = id
 		self.shutdown = false
 
