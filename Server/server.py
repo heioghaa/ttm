@@ -37,35 +37,40 @@ class CLientHandler(SocketServer.BaseRequestHandler):
         print 'self.id:' + str(self.id) + '\n'
         reciever = MessageWorker.ReceiveMessageWorker(self.connection, self.id)
         reciever.start()
-        while controlQueue[0][0] != self.id:
-             sleep(0.02)
-        status = controlQueue.get()[1]
-        if status[:15] == 'Invalid username':
-            self.connection.sendall('login\n' + status[:15] + '\n' + status[16:])
-            print status
-            self.shutDown()
-        elif status[:21] == 'Username already taken':
-            self.connection.sendall('login\n' + status[22:] + '\n' + status[:21])
-            print status
-            self.shutDown()
-        elif status[:4] != 'login':
-            self.connection.sendall('login\nUnknown Error' + status[5:])
-            print status
-            self.shutDown()
-        self.connection.sendall('login\n' + status[5:])
-        print status
-        msgNo = 0
         while True:
-            while len(messageLog) >= msgNo:
-                self.connection.sendall(messageLog[msgNo])
-                msgNo += 1
-            if controlQueue[0][0] == self.id:
-                status = controlQueue.get()[1]
-                if status[:5] == 'logout':
-                    self.connection.sendall('logout\n' + status[6:])
+            controlObj = controlQueue.pop()
+            if controlObj[0] != self.id:
+                controlQueue.put(controlObj)
+            else:             
+                status = controlObj[1]
+                if status[:15] == 'Invalid username':
+                    self.connection.sendall('login\n' + status[:15] + '\n' + status[16:])
                     print status
                     self.shutDown()
-            
+                elif status[:21] == 'Username already taken':
+                    self.connection.sendall('login\n' + status[22:] + '\n' + status[:21])
+                    print status
+                    self.shutDown()
+                elif status[:4] != 'login':
+                    self.connection.sendall('login\nUnknown Error' + status[5:])
+                    print status
+                    self.shutDown()
+                else
+                    
+                    self.connection.sendall('login\n' + status[5:])
+                print status
+                msgNo = 0
+                while True:
+                    while len(messageLog) >= msgNo:
+                        self.connection.sendall(messageLog[msgNo])
+                        msgNo += 1
+                    if controlQueue[0][0] == self.id:
+                        status = controlQueue.get()[1]
+                        if status[:5] == 'logout':
+                            self.connection.sendall('logout\n' + status[6:])
+                            print status
+                            self.shutDown()
+                    
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     pass
 

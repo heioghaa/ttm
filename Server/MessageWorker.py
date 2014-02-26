@@ -23,6 +23,7 @@ import re
 class ReceiveMessageWorker(Thread):
 
 	def __init__(self, connection, id):
+		super(ReceiveMessageWorker, self).__init__()
 		self.daemeon = True
 		self.socket = connection
 		self.id = id
@@ -30,7 +31,7 @@ class ReceiveMessageWorker(Thread):
 
 	def run(self):
 		while not self.shutdown:
-			message = socket.recv(4096)
+			message = self.socket.recv(4096)
 			data = json.loads(message)
 			with mtx:
 				if data['request'] == 'login':
