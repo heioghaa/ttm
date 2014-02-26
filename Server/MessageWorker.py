@@ -15,7 +15,7 @@ executing the run() method in a new thread.
 '''
 from threading import Thread
 import datetime
-import globals
+import GlobalVar
 import json
 import re
 
@@ -32,6 +32,7 @@ class ReceiveMessageWorker(Thread):
 	def run(self):
 		while not self.shutdown:
 			message = self.socket.recv(4096)
+			print "DEUBG: message: " + str(message)
 			data = json.loads(message)
 			with mtx:
 				if data['request'] == 'login':
