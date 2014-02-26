@@ -72,7 +72,7 @@ if __name__ == "__main__":
 	#HOST = 'localhost'
 	#PORT = 9999
 	HOST = raw_input('Enter hostname or ip address: ')
-	PORT = raw_input('Enter port: ')
+	PORT = input('Enter port: ')
 	# Initialiser klienten
 	client = Client()
 	# Start klienten
