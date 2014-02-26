@@ -33,7 +33,9 @@ class CLientHandler(SocketServer.BaseRequestHandler):
         self.port = self.client_address[1]
         self.id = uuid.uuid1()
         print 'Client connected @' + self.ip + ':' + str(self.port)
-        reciever = RecieveMessageWorker(self.connection, self.id)
+        print 'self.connection:' + str(self.connection) + '\n'
+        print 'self.id:' + str(self.id) + '\n'
+        reciever = MessageWorker.ReceiveMessageWorker(self.connection, self.id)
         reciever.start()
         while controlQueue[0][0] != self.id:
              sleep(0.02)
@@ -64,25 +66,17 @@ class CLientHandler(SocketServer.BaseRequestHandler):
                     print status
                     self.shutDown()
             
-        
-        
-
-'''
-This will make all Request handlers being called in its own thread.
-Very important, otherwise only one client will be served at a time
-'''
-
-
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     pass
 
 if __name__ == "__main__":
     HOST = 'localhost'
-    PORT = 9999
+    PORT = 9998
 
     # Create the server, binding to localhost on port 9999
     server = ThreadedTCPServer((HOST, PORT), CLientHandler)
 
     # Activate the server; this will keep running until you
     # interrupt the program with Ctrl-C
+    print "Starting server"
     server.serve_forever()
