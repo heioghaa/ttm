@@ -4,12 +4,15 @@ KTN-project 2013 / 2014
 Very simple server implementation that should serve as a basis
 for implementing the chat server
 '''
+import sys
 import SocketServer
 import thread
+import mutex
 from time import sleep
-import GlobalVar
+from GlobalVar import *
 import MessageWorker
 import uuid
+from json import JSONEncoder
 '''
 The RequestHandler class for our server.
 
@@ -18,11 +21,26 @@ overrid the handle() method to implement communication to the
 client.
 '''
 class CLientHandler(SocketServer.BaseRequestHandler):
-    def shutDown(self):
+    def shutDown(self, reciever):
         reciever.shutdown = True
         reciever.join()
         print 'Client disconnected'
         self.exit()
+
+    def printDebug(self, string):
+        print "DEBUG: " + str(string)
+
+    def sendError(self, error, username):
+        data = JSONEncoder().encode({'response': 'login', 'error': error, 'username': username})
+        print "Sending: " + str(data)
+        self.connection.sendall(data)
+
+    def sendResponse(self, response, username=None):
+        if username:
+            data = JSONEncoder().encode({'response': response, 'username': username})
+        else:
+            data = JSONEncoder().encode({'response': response})
+        self.connection.sendall(data)
 
     def handle(self):
         # Get a reference to the socket object
@@ -38,38 +56,46 @@ class CLientHandler(SocketServer.BaseRequestHandler):
         reciever = MessageWorker.ReceiveMessageWorker(self.connection, self.id)
         reciever.start()
 
-        controlObj = GlobalVar.controlQueue.get(True)
+# Check for corret login
+        controlObj = controlQueue.get(True)
         while controlObj[0] != self.id:
             controlQueue.put(controlObj)
             controlObj = controlQueue.pop()
 
         status = controlObj[1]
-        if status[:15] == 'Invalid username':
-            self.connection.sendall('login\n' + status[:15] + '\n' + status[16:])
-            print status
-            self.shutDown()
-        elif status[:21] == 'Username already taken':
-            self.connection.sendall('login\n' + status[22:] + '\n' + status[:21])
-            print status
-            self.shutDown()
-        elif status[:4] != 'login':
-            self.connection.sendall('login\nUnknown Error' + status[5:])
-            print status
-            self.shutDown()
+        if status[:7] == 'invalid':
+            self.printDebug(status)
+            self.sendError('Invalid username!', status[:7])
+            self.shutDown(reciever)
+        elif status[:5] == 'taken':
+            self.printDebug(status)
+            self.sendError('Name already taken!', status[5:])
+            self.shutDown(reciever)
+        elif status[:5] != 'login' or status == None:
+            self.printDebug(status)
+            self.sendError('Unknown error!', status)
+            self.shutDown(reciever)
+        else:
+            self.printDebug(status)
+            self.sendResponse('login', status[5:])
 
-        self.connection.sendall('login\n' + status[5:])
-        print status
         msgNo = 0
         while True:
-            while len(messageLog) >= msgNo:
+            mtx.acquire()
+            while len(messageLog) > msgNo:
                 self.connection.sendall(messageLog[msgNo])
                 msgNo += 1
-            if controlQueue[0][0] == self.id:
-                status = controlQueue.get()[1]
+            mtx.release()
+
+            controlObj = controlQueue.get()
+            if controlObj[0] != self.id:
+                controlQueue.put(controlObj)
+            else:
+                status = controlObj[1]
                 if status[:5] == 'logout':
                     self.connection.sendall('logout\n' + status[6:])
-                    print status
-                    self.shutDown()
+                    printdebug(status)
+                    self.shutDown(reciever)
             
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     pass
@@ -77,6 +103,10 @@ class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
 if __name__ == "__main__":
     HOST = 'localhost'
     PORT = 9998
+    
+    if (len(sys.argv) == 3):
+        HOST = sys.argv[1]
+        PORT = int(sys.argv[2])
 
     # Create the server, binding to localhost on port 9999
     server = ThreadedTCPServer((HOST, PORT), CLientHandler)

@@ -15,11 +15,9 @@ executing the run() method in a new thread.
 '''
 from threading import Thread
 import datetime
-import GlobalVar
+from GlobalVar import *
 import json
 import re
-
-
 class ReceiveMessageWorker(Thread):
 
 	def __init__(self, connection, id):
@@ -34,18 +32,18 @@ class ReceiveMessageWorker(Thread):
 			message = self.socket.recv(4096)
 			print "DEUBG: message: " + str(message)
 			data = json.loads(message)
-			with mtx:
-				if data['request'] == 'login':
-					if data['username'] in userList.items():
-						controlQueue.put((self.id, 'Username already taken' + data['username']))
-					else:
-						if re.search('[a-zA-Z0-9_]+', data['username']) == None:
-							controlQueue.put((self.id, 'Invalid username' + data['username']))
-						else:
-							userList[self.id] = data['username']
-							controlQueue.put((self.id, 'login'))
-				elif data['request'] == 'logout':
-					controlQueue.put((self.id, 'logout'))
+			mtx.acquire()
+			if data['request'] == 'login':
+				if data['username'] in userList.items():
+					controlQueue.put((self.id, 'taken' + data['username']))
 				else:
-					messageLog.append(datetime.datetime.today().time() + self.username + ': ' + data['message'])
-				
+					if re.search('[a-zA-Z0-9_]+', data['username']) == None:
+						controlQueue.put((self.id, 'invalid' + data['username']))
+					else:
+						userList[self.id] = data['username']
+						controlQueue.put((self.id, 'login' + data['username']))
+			elif data['request'] == 'logout':
+				controlQueue.put((self.id, 'logout'))
+			else:
+				messageLog.append(datetime.datetime.today().time() + self.username + ': ' + data['message'])
+			mtx.release()	

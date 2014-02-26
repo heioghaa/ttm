@@ -1,10 +1,9 @@
 import thread
 import Queue
-import mutex
 
 messageLog = []
 controlQueue = Queue.Queue()
 clients = {}
-mtx = mutex.mutex()
+mtx = thread.allocate_lock()
 userList = {}
 
