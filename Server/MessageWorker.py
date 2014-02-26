@@ -26,7 +26,7 @@ class ReceiveMessageWorker(Thread):
 		self.daemeon = True
 		self.socket = connection
 		self.id = id
-		self.shutdown = false
+		self.shutdown = False
 
 	def run(self):
 		while not self.shutdown:
