@@ -35,17 +35,18 @@ class CLientHandler(SocketServer.BaseRequestHandler):
         self.connection.sendall(data)
 
     def sendResponse(self, response, username=None):
+        bla = 0
         if username:
             mtx.acquire()
             data = JSONEncoder().encode({'response': response, 'username': username, 'messages': messageLog})
             bla = len(messageLog)
             mtx.release()
-            return bla
-        
         else:
             data = JSONEncoder().encode({'response': response})
-            printDebug(data)
+        self.printDebug(data)
         self.connection.sendall(data)
+        return bla
+            
 
     def handle(self):
         # Get a reference to the socket object
