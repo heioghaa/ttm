@@ -43,7 +43,7 @@ class ReceiveMessageWorker(Thread):
 						else:
 							userList[self.id] = data['username']
 							controlQueue.put((self.id, 'login'))
-				else if data['request'] == 'logout':
+				elif data['request'] == 'logout':
 					controlQueue.put((self.id, 'logout'))
 				else:
 					messageLog.append(datetime.datetime.today().time() + self.username + ': ' + data['message'])

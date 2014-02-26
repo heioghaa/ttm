@@ -1,3 +1,4 @@
+#!/usr/bin/python2
 '''
 KTN-project 2013 / 2014
 Very simple server implementation that should serve as a basis
