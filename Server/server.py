@@ -99,8 +99,6 @@ class CLientHandler(SocketServer.BaseRequestHandler):
 
         while True:
             mtx.acquire()
-            self.printDebug("Len messaglog: " + str(len(messageLog)))
-            self.printDebug("Logged len: " + str(msgNo))
             while len(messageLog) > msgNo:
                 data = JSONEncoder().encode({'response': 'message','message': messageLog[msgNo]})
                 self.connection.sendall(data)
