@@ -15,22 +15,25 @@ class Client(object):
 				print data['response']+": "+data['error']+": "+data['username']+"\n"
 				username = raw_input('Enter your username: ')
 				request = 'login'
-				self.send(json.dumps({'username':username,'request':request}))
+				self.send(json.JSONEncoder().encode({'username':username,'request':request}))
 			elif data['response']=='login' and ('error' in data.keys()) and data['error']=='Name already taken!':
 				print data['response']+": "+data['error']+": "+data['username']+"\n"
 				username = raw_input('Enter your username: ')
 				request = 'login'
-				self.send(json.dumps({'username':username,'request':request}))
-			elif data['response']=='login':
+				self.send(json.JSONEncoder().encode({'username':username,'request':request}))
+			elif data['response']=='login' and ('messages' in data.keys()):
 				print data['response']+": "+data['username']+"\n"
 				self.Login = True
+                                for n in data['messages']:
+                                    print n
 			elif data['response']=='message' and ('error' in data.keys()) and data['error']=='You are not logged in!':
 				username = raw_input('Enter your username: ')
 				request = 'login'
-				self.send(json.dumps({'username':username,'request':request}))
+				self.send(json.JSONEncoder().encode({'username':username,'request':request}))
 			elif data['response']=='message':
 				print data['message']
 			#print '\n'+ recived_data['response']
+
 	def start(self, host, port):
 		# Start tilkoblingen
 		self.connection.connect((host, port))
@@ -39,7 +42,7 @@ class Client(object):
 		# Be brukeren om å skrive inn brukernavn
 		username = raw_input('Enter your username: ')
 		request = 'login'
-		self.send(json.dumps({'username':username,'request':request}))
+		self.send(json.JSONEncoder().encode({'username':username,'request':request}))
 		while self.Login == False:
 			continue
 		message = ''
@@ -50,7 +53,7 @@ class Client(object):
 
 			# Lukk tilkoblingen hvis brukeren skriver "exit"
 			if message == 'exit':
-				self.send(json.dumps({'nick': nick, 'message': 'I\'m leaving. Goodbye!'}))
+				self.send(json.JSONEncoder().encode({'nick': username, 'message': 'I\'m leaving. Goodbye!'}))
 				self.connection.close()
 				break
 			# Konstruer et JSON objekt som som skal
@@ -58,12 +61,12 @@ class Client(object):
 			request='message'
 			data = {'request':request , 'message': message}
 			# Lag en streng av JSON-objektet
-			data = json.dumps(data)
+			data = json.JSONEncoder().encode(data)
 			# Send meldingen til serveren
 			self.send(data)
 			# Lag en metode for å sende en melding til serveren
 	def send(self, data):
-		self.connection.send(data)
+		self.connection.sendall(data)
 
 
 # Kjøres når programmet startes

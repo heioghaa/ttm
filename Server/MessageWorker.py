@@ -15,6 +15,7 @@ executing the run() method in a new thread.
 '''
 from threading import Thread
 import datetime
+import Queue
 from GlobalVar import *
 import json
 import re
@@ -26,25 +27,25 @@ class ReceiveMessageWorker(Thread):
 		self.socket = connection
 		self.id = id
 		self.shutdown = False
-
+                self.controlQueue = Queue.Queue()
 	def run(self):
 		while not self.shutdown:
 			message = self.socket.recv(4096)
 			print "DEUBG: message: " + str(message)
 			data = json.loads(message)
-			mtx.acquire()
 			if data['request'] == 'login':
 				print data['username'], userList;
 				if unicode(data['username']) in userList.values():
-					controlQueue.put((self.id, 'taken' + data['username']))
+					self.controlQueue.put((self.id, 'taken' + data['username']))
 				else:
 					if not data['username'].isalnum():
-						controlQueue.put((self.id, 'invalid' + data['username']))
+						self.controlQueue.put((self.id, 'invalid' + data['username']))
 					else:
 						userList[self.id] = data['username']
-						controlQueue.put((self.id, 'login' + data['username']))
+						self.controlQueue.put((self.id, 'login' + data['username']))
 			elif data['request'] == 'logout':
-				controlQueue.put((self.id, 'logout'))
+				self.controlQueue.put((self.id, 'logout'))
 			else:
+				mtx.acquire()
 				messageLog.append(unicode(datetime.datetime.today().time()) + userList[self.id] + ': ' + unicode(data['message']))
-			mtx.release()	
+				mtx.release()

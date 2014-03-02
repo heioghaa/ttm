@@ -22,8 +22,10 @@ client.
 '''
 class CLientHandler(SocketServer.BaseRequestHandler):
     def shutDown(self, reciever):
+        print 'Shutting down'
         reciever.shutdown = True
         reciever.join()
+        self.connection.close()
         print 'Client disconnected'
 
     def printDebug(self, string):
@@ -40,15 +42,14 @@ class CLientHandler(SocketServer.BaseRequestHandler):
             mtx.acquire()
             self.printDebug("CONNECTION!")
             if (len(messageLog) == 0):
-                 data = JSONEncoder().encode({'response': response, 'username': username, 'messages': messageLog})
+                 data = JSONEncoder().encode({'response': response, 'username': username, 'messages': ''})
                  self.printDebug(data)
                  self.connection.sendall(data)
-            while(bla<len(messageLog)):
-                data = JSONEncoder().encode({'response': response, 'username': username, 'messages': messageLog[bla]})
-               # bla = len(messageLog)
+            else:
+                data = JSONEncoder().encode({'response': response, 'username': username, 'messages': messageLog})
+                bla = len(messageLog)
                 self.printDebug(data)
                 self.connection.sendall(data)
-                bla += 1
             mtx.release()
         else:
             data = JSONEncoder().encode({'response': response})
@@ -72,11 +73,10 @@ class CLientHandler(SocketServer.BaseRequestHandler):
         reciever.start()
 
 # Check for corret login
-        controlObj = controlQueue.get(True)
-        while controlObj[0] != self.id:
-            controlQueue.put(controlObj)
-            controlObj = controlQueue.pop()
-
+        controlObj = reciever.controlQueue.get(True)
+        if controlObj[0] != self.id:
+        		printDebug("Something went horribly wrong")
+        		exi()
         status = controlObj[1]
         if status[:7] == 'invalid':
             self.printDebug(status)
@@ -99,22 +99,29 @@ class CLientHandler(SocketServer.BaseRequestHandler):
 
         while True:
             mtx.acquire()
+            self.printDebug("Len messaglog: " + str(len(messageLog)))
+            self.printDebug("Logged len: " + str(msgNo))
             while len(messageLog) > msgNo:
-                data = JSONEncoder().encode({'response': 'message','message':messageLog[msgNo]})
+                data = JSONEncoder().encode({'response': 'message','message': messageLog[msgNo]})
                 self.connection.sendall(data)
                 msgNo += 1
             mtx.release()
 
-            controlObj = controlQueue.get()
+            if reciever.controlQueue.empty():
+								continue
+
+            controlObj = reciever.controlQueue.get_nowait()
             if controlObj[0] != self.id:
-                controlQueue.put(controlObj)
+               printDebug("Something went horribly wrong") 
             else:
                 status = controlObj[1]
                 if status[:5] == 'logout':
                     self.connection.sendall('logout\n' + status[6:])
                     printdebug(status)
                     self.shutDown(reciever)
-            
+            sleep(0.002)
+            printDebug("left sleep")
+
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     pass
 
