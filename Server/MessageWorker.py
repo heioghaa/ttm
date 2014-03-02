@@ -47,5 +47,5 @@ class ReceiveMessageWorker(Thread):
 				self.controlQueue.put((self.id, 'logout'))
 			else:
 				mtx.acquire()
-				messageLog.append(unicode(datetime.datetime.today().time()) + userList[self.id] + ': ' + unicode(data['message']))
+				messageLog.append(unicode(datetime.datetime.today().time())[0:8] + " " + userList[self.id] + ': ' + unicode(data['message']))
 				mtx.release()
