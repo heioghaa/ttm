@@ -39,18 +39,20 @@ class CLientHandler(SocketServer.BaseRequestHandler):
     def sendResponse(self, response, username=None):
         bla = 0
         if username:
-            mtx.acquire()
-            self.printDebug("CONNECTION!")
-            if (len(messageLog) == 0):
-                 data = JSONEncoder().encode({'response': response, 'username': username, 'messages': ''})
-                 self.printDebug(data)
-                 self.connection.sendall(data)
-            else:
-                data = JSONEncoder().encode({'response': response, 'username': username, 'messages': messageLog})
-                bla = len(messageLog)
-                self.printDebug(data)
-                self.connection.sendall(data)
-            mtx.release()
+            try:
+                mtx.acquire()
+                self.printDebug("CONNECTION!")
+                if (len(messageLog) == 0):
+                     data = JSONEncoder().encode({'response': response, 'username': username, 'messages': ''})
+                     self.printDebug(data)
+                     self.connection.sendall(data)
+                else:
+                    data = JSONEncoder().encode({'response': response, 'username': username, 'messages': messageLog[-10:-1]})
+                    bla = len(messageLog)
+                    self.printDebug(data)
+                    self.connection.sendall(data)
+            finally:
+                mtx.release()
         else:
             data = JSONEncoder().encode({'response': response})
             self.printDebug(data)
@@ -99,15 +101,17 @@ class CLientHandler(SocketServer.BaseRequestHandler):
 
         while True:
             sleep(0.002)
-            mtx.acquire()
-            while len(messageLog) > msgNo:
-                data = JSONEncoder().encode({'response': 'message','message': messageLog[msgNo]})
-                self.connection.sendall(data)
-                msgNo += 1
-            mtx.release()
+            try:
+                mtx.acquire()
+                while len(messageLog) > msgNo:
+                    data = JSONEncoder().encode({'response': 'message','message': messageLog[msgNo]})
+                    self.connection.sendall(data)
+                    msgNo += 1
+            finally:
+                mtx.release()
 
             if reciever.controlQueue.empty():
-								continue
+                continue
 
             controlObj = reciever.controlQueue.get_nowait()
             if controlObj[0] != self.id:
