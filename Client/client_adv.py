@@ -18,9 +18,7 @@ class Client(object):
 				self.send(json.JSONEncoder().encode({'username':username,'request':request}))
 			elif data['response']=='login' and ('error' in data.keys()) and data['error']=='Name already taken!':
 				print data['response']+": "+data['error']+": "+data['username']+"\n"
-				username = raw_input('Enter your username: ')
-				request = 'login'
-				self.send(json.JSONEncoder().encode({'username':username,'request':request}))
+				return
 			elif data['response']=='login' and ('messages' in data.keys()):
 				print data['response']+": "+data['username']+"\n"
 				self.Login = True
