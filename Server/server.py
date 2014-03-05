@@ -98,6 +98,7 @@ class CLientHandler(SocketServer.BaseRequestHandler):
             msgNo = self.sendResponse('login', status[5:])
 
         while True:
+            sleep(0.002)
             mtx.acquire()
             while len(messageLog) > msgNo:
                 data = JSONEncoder().encode({'response': 'message','message': messageLog[msgNo]})
@@ -117,9 +118,7 @@ class CLientHandler(SocketServer.BaseRequestHandler):
                     self.connection.sendall('logout\n' + status[6:])
                     printdebug(status)
                     self.shutDown(reciever)
-            sleep(0.002)
-            printDebug("left sleep")
-
+                    return
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     pass
 
