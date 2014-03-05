@@ -26,6 +26,12 @@ class Client(object):
 				self.Login = True
                                 for n in data['messages']:
                                     print n
+			elif data['response']=='logout' and ('error' in data.keys()) and data['error'] == 'Not logged in!':
+				print "Username not logged in."
+				return
+			elif data['response']=='logout' and ('username' in data.keys()):
+				print "Username logged out."
+				return
 			elif data['response']=='message' and ('error' in data.keys()) and data['error']=='You are not logged in!':
 				username = raw_input('Enter your username: ')
 				request = 'login'
@@ -53,7 +59,7 @@ class Client(object):
 
 			# Lukk tilkoblingen hvis brukeren skriver "exit"
 			if message == 'exit':
-				self.send(json.JSONEncoder().encode({'nick': username, 'message': 'I\'m leaving. Goodbye!'}))
+				self.send(json.JSONEncoder().encode({'request': 'logout'}))
 				self.connection.close()
 				break
 			# Konstruer et JSON objekt som som skal
