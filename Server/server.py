@@ -34,29 +34,37 @@ class CLientHandler(SocketServer.BaseRequestHandler):
     def sendError(self, error, username):
         data = JSONEncoder().encode({'response': 'login', 'error': error, 'username': username})
         print "Sending: " + str(data)
-        self.connection.sendall(data)
+        try:
+            self.connection.sendall(data)
+        except:
+            self.shutdown()
+            self.exit()
 
     def sendResponse(self, response, username=None):
         bla = 0
+        data = ''
         if username:
             try:
                 mtx.acquire()
                 self.printDebug("CONNECTION!")
                 if (len(messageLog) == 0):
                      data = JSONEncoder().encode({'response': response, 'username': username, 'messages': ''})
-                     self.printDebug(data)
-                     self.connection.sendall(data)
                 else:
                     data = JSONEncoder().encode({'response': response, 'username': username, 'messages': messageLog[-10:-1]})
                     bla = len(messageLog)
-                    self.printDebug(data)
-                    self.connection.sendall(data)
             finally:
                 mtx.release()
         else:
             data = JSONEncoder().encode({'response': response})
-            self.printDebug(data)
+
+        self.printDebug(data)
+        try:
             self.connection.sendall(data)
+        except:
+            self.printDebug("Broken pipe")
+            self.shutDown()
+            self.exit()
+
         return bla
             
 
@@ -101,33 +109,38 @@ class CLientHandler(SocketServer.BaseRequestHandler):
 
         while True:
             sleep(0.002)
+            if not reciever.controlQueue.empty():
+                controlObj = reciever.controlQueue.get_nowait()
+                if controlObj[0] != self.id:
+                   self.printDebug("Something went horribly wrong") 
+                else:
+                    status = controlObj[1]
+                    self.printDebug(status)
+                    if status[:6] == 'logout':
+                        data = JSONEncoder().encode({'response': 'logout','username':status[6:]})
+                        print data
+                        try:
+                            self.connection.sendall(data)
+                        finally:
+                            self.shutDown(reciever)
+                            return
+                    elif status == 'connerr':
+                        self.shutDown(reciever)
+                        return
             try:
                 mtx.acquire()
                 while len(messageLog) > msgNo:
                     data = JSONEncoder().encode({'response': 'message','message': messageLog[msgNo]})
-                    self.connection.sendall(data)
+                    try:
+                        self.connection.sendall(data)
+                    except:
+                        self.printDebug("Broken pipe")
+                        self.shutDown(reciever)
+                        return
                     msgNo += 1
             finally:
                 mtx.release()
 
-            if reciever.controlQueue.empty():
-                continue
-
-            controlObj = reciever.controlQueue.get_nowait()
-            if controlObj[0] != self.id:
-               self.printDebug("Something went horribly wrong") 
-            else:
-                status = controlObj[1]
-                self.printDebug(status)
-                if status[:6] == 'logout':
-                    data = JSONEncoder().encode({'response': 'logout','username':status[6:]})
-                    print data
-                    self.connection.sendall(data)
-                    self.shutDown(reciever)
-                    return
-                elif status == 'connerr':
-                    self.shutDown(reciever)
-                    return
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     pass

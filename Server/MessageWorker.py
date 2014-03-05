@@ -34,9 +34,14 @@ class ReceiveMessageWorker(Thread):
                         try:
     			    message = self.socket.recv(4096)
                         except:
-                            self.controlQueue.put(self.id, 'connclose')
+                            self.controlQueue.put((self.id, 'connclose'))
                             while not self.controlQueue.empty():
                                 sleep(0.002)
+                            try:
+                                mtx.acquire()
+                                messageLog.append(userList[self.id] + ": Connection reset by peer");
+                            finally:
+                                mtx.release()
                             del userList[self.id]
                             return
 
@@ -52,8 +57,19 @@ class ReceiveMessageWorker(Thread):
 					else:
 						userList[self.id] = data['username']
 						self.controlQueue.put((self.id, 'login' + data['username']))
+                                                try:
+                                                    mtx.acquire()
+                                                    messageLog.append(userList[self.id] + " logged in")
+                                                finally:
+                                                    mtx.release()
+
 			elif data['request'] == 'logout':
 				self.controlQueue.put((self.id, 'logout' + userList[self.id]))
+                                try:
+                                    mtx.acquire()
+                                    messageLog.append(userList[self.id] + " logging out")
+                                finally:
+                                    mtx.release()
                                 while not self.controlQueue.empty():
                                     sleep(0.0002)
                                 print "Debug: Control queue empty"
