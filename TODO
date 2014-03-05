@@ -1,0 +1,7 @@
+Crash:
+
+- ÆØÅ (unicode ting)
+- server: line 33. disconnect by peer (fiksa trur eg)
+
+Fixes:
+- timout når disconnect (fiksa trur eg)
