@@ -111,14 +111,17 @@ class CLientHandler(SocketServer.BaseRequestHandler):
 
             controlObj = reciever.controlQueue.get_nowait()
             if controlObj[0] != self.id:
-               printDebug("Something went horribly wrong") 
+               self.printDebug("Something went horribly wrong") 
             else:
                 status = controlObj[1]
-                if status[:5] == 'logout':
-                    self.connection.sendall('logout\n' + status[6:])
-                    printdebug(status)
+                self.printDebug(status)
+                if status[:6] == 'logout':
+                    data = JSONEncoder().encode({'response': 'logout','username':status[6:]})
+                    print data
+                    self.connection.sendall(data)
                     self.shutDown(reciever)
                     return
+
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     pass
 

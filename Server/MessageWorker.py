@@ -19,6 +19,7 @@ import Queue
 from GlobalVar import *
 import json
 import re
+from time import sleep
 class ReceiveMessageWorker(Thread):
 
 	def __init__(self, connection, id):
@@ -44,9 +45,11 @@ class ReceiveMessageWorker(Thread):
 						userList[self.id] = data['username']
 						self.controlQueue.put((self.id, 'login' + data['username']))
 			elif data['request'] == 'logout':
-				self.controlQueue.put((self.id, 'logout'))
+				self.controlQueue.put((self.id, 'logout' + userList[self.id]))
                                 while not self.controlQueue.empty():
-                                    sleep(0.0000002)
+                                    sleep(0.0002)
+                                print "Debug: Control queue empty"
+                                del userList[self.id]
                                 return
 			else:
 				mtx.acquire()
