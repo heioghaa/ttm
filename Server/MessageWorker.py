@@ -31,7 +31,15 @@ class ReceiveMessageWorker(Thread):
                 self.controlQueue = Queue.Queue()
 	def run(self):
 		while not self.shutdown:
-			message = self.socket.recv(4096)
+                        try:
+    			    message = self.socket.recv(4096)
+                        except:
+                            self.controlQueue.put(self.id, 'connclose')
+                            while not self.controlQueue.empty():
+                                sleep(0.002)
+                            del userList[self.id]
+                            return
+
 			print "DEUBG: message: " + str(message)
 			data = json.loads(message)
 			if data['request'] == 'login':

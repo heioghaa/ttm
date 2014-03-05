@@ -125,6 +125,9 @@ class CLientHandler(SocketServer.BaseRequestHandler):
                     self.connection.sendall(data)
                     self.shutDown(reciever)
                     return
+                elif status == 'connerr':
+                    self.shutDown(reciever)
+                    return
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     pass
